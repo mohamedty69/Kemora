@@ -1,0 +1,54 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=.\\SQLEXPRESS;Database=KemoraDb;Trusted_Connection=True;MultipleActiveResultSets=True;TrustServerCertificate=True"
+  },
+  "TokenKey": "YOUR_SECRET_JWT_TOKEN_KEY_AT_LEAST_64_CHARACTERS_LONG",
+  "BaseUrl": "http://localhost:5299",
+  "Places": {
+    "Provider": "Foursquare"
+  },
+  "Foursquare": {
+    "ApiKey": "YOUR_FOURSQUARE_API_KEY"
+  },
+  "SerpApi": {
+    "ApiKey": "YOUR_SERP_API_KEY"
+  },
+  "OpenRouter": {
+    "ApiKey": "YOUR_OPENROUTER_API_KEY",
+    "MaxRequestsPerModelPerDay": 40
+  },
+  "GoogleMaps": {
+    "ApiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+  },
+  "Google": {
+    "ApiKey": "YOUR_GOOGLE_API_KEY"
+  },
+  "Gemini": {
+    "ApiKey": "YOUR_GEMINI_API_KEY"
+  },
+  "WisdomGate": {
+    "Model": "deepseek-v3",
+    "ApiKey": "YOUR_WISDOM_GATE_API_KEY"
+  },
+  "Cloudinary": {
+    "CloudName": "YOUR_CLOUDINARY_CLOUD_NAME",
+    "ApiKey": "YOUR_CLOUDINARY_API_KEY",
+    "ApiSecret": "YOUR_CLOUDINARY_API_SECRET"
+  },
+  "EmailSettings": {
+    "Host": "smtp-relay.brevo.com",
+    "Port": 587,
+    "Username": "YOUR_BREVO_LOGIN_EMAIL",
+    "Password": "YOUR_BREVO_PASSWORD",
+    "FromEmail": "noreply@kemora.app",
+    "FromName": "Kemora"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.EntityFrameworkCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*"
+}

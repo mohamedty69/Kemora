@@ -17,6 +17,7 @@ namespace Kemora.Application.Services
         private readonly IRepository<PlaceType> _typeRepo;
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IImageService _imageService;
 
         public PlaceManagementService(
             IPlaceRepository placeRepo,
@@ -24,7 +25,8 @@ namespace Kemora.Application.Services
             IRepository<Category> catRepo,
             IRepository<PlaceType> typeRepo,
             IMapper mapper,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IImageService imageService)
         {
             _placeRepo = placeRepo;
             _govRepo = govRepo;
@@ -32,6 +34,7 @@ namespace Kemora.Application.Services
             _typeRepo = typeRepo;
             _mapper = mapper;
             _unitOfWork = unitOfWork;
+            _imageService = imageService;
         }
 
         public async Task<GovernorateDto> CreateGovernorateAsync(CreateGovernorateDto dto)
@@ -105,13 +108,13 @@ namespace Kemora.Application.Services
             await _typeRepo.AddAsync(pt);
             await _unitOfWork.CommitAsync();
             
-            var created = await _placeRepo.GetPlaceTypeAsync(pt.TypeID);
+            var created = await _typeRepo.GetByIdAsync(pt.TypeID);
             return _mapper.Map<PlaceTypeDto>(created);
         }
 
         public async Task<List<PlaceTypeDto>> GetPlaceTypesAsync()
         {
-            var pts = await _placeRepo.GetAllPlaceTypesAsync();
+            var pts = await _typeRepo.GetAllAsync(pt => pt.Category);
             return _mapper.Map<List<PlaceTypeDto>>(pts);
         }
 
@@ -180,6 +183,20 @@ namespace Kemora.Application.Services
             _placeRepo.Remove(p);
             await _unitOfWork.CommitAsync();
             return true;
+        }
+
+        public async Task<(bool Succeeded, string? Error, string? Url)> UploadPlacePictureAsync(int placeId, System.IO.Stream imageStream, string fileName)
+        {
+            var p = await _placeRepo.GetByIdAsync(placeId);
+            if (p == null) return (false, "Place not found.", null);
+
+            var url = await _imageService.UploadImageAsync(imageStream, fileName);
+            if (string.IsNullOrEmpty(url)) return (false, "Failed to upload image.", null);
+
+            p.MainImageURL = url;
+            await _unitOfWork.CommitAsync();
+
+            return (true, null, url);
         }
     }
 }

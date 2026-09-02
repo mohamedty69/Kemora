@@ -1,0 +1,1 @@
+ = 'AIzaSyAYxl4bkpfQvvqptBroiOWLY5Pd6yn5Z88';  = @{ 'Content-Type' = 'application/json'; 'X-Goog-Api-Key' = ; 'X-Goog-FieldMask' = 'places.id,places.displayName,places.photos' };  = @{ textQuery = 'Port Said, Egypt museums' } | ConvertTo-Json;  = Invoke-RestMethod -Uri 'https://places.googleapis.com/v1/places:searchText' -Method Post -Headers  -Body ;  | ConvertTo-Json -Depth 5

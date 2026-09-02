@@ -8,6 +8,8 @@ namespace Kemora.Application.DTOs
         [StringLength(2000, ErrorMessage = "Comment content cannot exceed 2000 characters.")]
         public string Content { get; set; } = string.Empty;
 
+        public int? ParentCommentId { get; set; }
+
         public List<CreateCommentMediaDto>? Media { get; set; }
     }
 
@@ -42,7 +44,10 @@ namespace Kemora.Application.DTOs
         public DateTime CreatedAt { get; set; }
         public string AuthorId { get; set; } = string.Empty;
         public string AuthorName { get; set; } = string.Empty;
+        public string? AuthorProfilePicture { get; set; }
+        public int? ParentCommentId { get; set; }
         public List<CommentMediaResponseDto> Media { get; set; } = [];
+        public List<CommentResponseDto> Replies { get; set; } = [];
         public int ReactionCount { get; set; }
     }
 }

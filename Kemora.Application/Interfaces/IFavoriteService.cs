@@ -8,7 +8,7 @@ namespace Kemora.Application.Interfaces
     {
         Task<bool> AddFavoriteAsync(string userId, int placeId);
         Task<bool> RemoveFavoriteAsync(string userId, int placeId);
-        Task<List<FavoriteResponseDto>> GetMyFavoritesAsync(string userId);
+        Task<List<PlacePublicDto>> GetMyFavoritesAsync(string userId);
         Task<FavoriteCheckDto> CheckFavoriteAsync(string userId, int placeId);
     }
 }

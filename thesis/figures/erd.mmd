@@ -1,0 +1,102 @@
+erDiagram
+    ApplicationUser ||--o{ UserBadge : earns
+    ApplicationUser ||--o{ UserPoint : earns
+    ApplicationUser ||--o{ Trip : plans
+    ApplicationUser ||--o{ UserFavorite : saves
+    ApplicationUser ||--o{ Post : publishes
+    ApplicationUser ||--o{ Comment : writes
+    ApplicationUser ||--o{ Message : sends/receives
+    ApplicationUser ||--o{ Notification : receives
+    ApplicationUser ||--o{ PostReaction : reacts
+    ApplicationUser ||--o{ CommentReaction : reacts
+
+    Governorate ||--o{ Place : contains
+    Category ||--o{ PlaceType : groups
+    PlaceType ||--o{ Place : categorizes
+
+    Place ||--o{ Photo : has
+    Place ||--o{ Review : has
+    Place ||--o{ Event : hosts
+    Place ||--o{ TripPlace : included_in
+    Place ||--o{ UserFavorite : favorited_by
+
+    Trip ||--o{ TripPlace : contains
+    Trip ||--o{ Post : linked_to
+
+    Post ||--o{ PostMedia : includes
+    Post ||--o{ PostReaction : has
+    Post ||--o{ Comment : has
+
+    Comment ||--o{ CommentMedia : includes
+    Comment ||--o{ CommentReaction : has
+    Comment ||--o{ Comment : replies
+
+    Badge ||--o{ UserBadge : awarded_as
+
+    ApplicationUser {
+        string Id PK
+        string FullName
+        string Country
+        int TotalPoints
+        string UserPreferencesJSON
+    }
+
+    Governorate {
+        int GovernorateID PK
+        string Name
+        string Region
+    }
+
+    Category {
+        int CategoryID PK
+        string Name
+    }
+
+    PlaceType {
+        int TypeID PK
+        string DisplayName
+        int CategoryID FK
+    }
+
+    Place {
+        int PlaceID PK
+        string Name
+        decimal Latitude
+        decimal Longitude
+        decimal Rating
+        int GovernorateID FK
+        int PlaceTypeID FK
+    }
+
+    Trip {
+        int TripID PK
+        string Name
+        string UserID FK
+    }
+
+    TripPlace {
+        int TripPlaceID PK
+        int TripID FK
+        int PlaceID FK
+    }
+
+    Post {
+        int PostID PK
+        string Content
+        string UserID FK
+        int LinkedTripId FK
+    }
+
+    Comment {
+        int CommentID PK
+        string Content
+        string UserID FK
+        int PostID FK
+        int ParentCommentId FK
+    }
+
+    Badge {
+        int BadgeID PK
+        string Name
+        int PointsReward
+    }

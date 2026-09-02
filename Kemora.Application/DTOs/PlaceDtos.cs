@@ -75,6 +75,12 @@ namespace Kemora.Application.DTOs
 
         /// <summary>Optional free-text preferences, e.g. "solo traveler", "family with kids".</summary>
         public string? Preferences { get; set; }
+
+        /// <summary>Optional. If provided, the plan will centre around this known DB place instead of arbitrary coordinates.</summary>
+        public int? CenterPlaceId { get; set; }
+
+        /// <summary>Used to generate and retrieve cached alternative versions of a trip plan.</summary>
+        public int AlternativeIndex { get; set; } = 1;
     }
 
     // ── Response DTOs ─────────────────────────────────────────────────────────

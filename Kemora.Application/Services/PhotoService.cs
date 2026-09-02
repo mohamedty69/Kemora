@@ -38,7 +38,7 @@ namespace Kemora.Application.Services
         {
             if (!await _placeRepo.ExistsAsync(placeId)) return new List<PhotoResponseDto>();
 
-            var photos = await _photoRepo.GetByPlaceIdAsync(placeId);
+            var photos = await _photoRepo.FindAsync(p => p.PlaceID == placeId);
             return _mapper.Map<List<PhotoResponseDto>>(photos);
         }
 
@@ -48,7 +48,7 @@ namespace Kemora.Application.Services
             if (photoToSet == null || photoToSet.PlaceID != placeId)
                 return false;
 
-            var existingMain = await _photoRepo.GetMainPhotoAsync(placeId);
+            var existingMain = await _photoRepo.FirstOrDefaultAsync(p => p.PlaceID == placeId && p.IsMain);
             if (existingMain != null) existingMain.IsMain = false;
 
             photoToSet.IsMain = true;

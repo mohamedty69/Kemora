@@ -13,21 +13,5 @@ namespace Kemora.Infrastructure.Repositories
     {
         public EventRepository(ApplicationDbContext ctx) : base(ctx) { }
 
-        public async Task<IEnumerable<Event>> GetUpcomingAsync(int count)
-        {
-            return await _dbSet
-                .Where(e => e.EndDate >= DateTime.UtcNow)
-                .OrderBy(e => e.StartDate)
-                .Take(count)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Event>> GetByPlaceIdAsync(int placeId)
-        {
-            return await _dbSet
-                .Where(e => e.PlaceID == placeId)
-                .OrderByDescending(e => e.StartDate)
-                .ToListAsync();
-        }
     }
 }

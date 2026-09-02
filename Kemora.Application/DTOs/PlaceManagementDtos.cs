@@ -142,7 +142,7 @@ namespace Kemora.Application.DTOs
     public class PlaceDetailDto
     {
         public int PlaceID { get; set; }
-        public string? GooglePlaceID { get; set; }
+        public string? GooglePlaceId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;

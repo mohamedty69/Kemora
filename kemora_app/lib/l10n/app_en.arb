@@ -1,0 +1,34 @@
+{
+  "appTitle": "World Travel Guide",
+  "exploreEgypt": "Explore Egypt",
+  "searchHint": "Search for specific city...",
+  "hotels": "Hotels",
+  "restaurants": "Restaurants",
+  "museums": "Museums",
+  "others": "Others",
+  "viewAll": "View All",
+  "events": "Events",
+  "comments": "Comments",
+  "achievements": "Achievements",
+  "seeAll": "See All",
+  "rewards": "Rewards",
+  "discount": "{percent}% Discount",
+  "@discount": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "settings": "Settings",
+  "language": "Language",
+  "changeLanguage": "Change Language",
+  "profile": "Profile",
+  "login": "Login",
+  "signup": "Sign Up",
+  "email": "Email",
+  "password": "Password",
+  "forgotPassword": "Forgot Password?",
+  "dontHaveAccount": "Don't have an account?",
+  "alreadyHaveAccount": "Already have an account?"
+}

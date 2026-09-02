@@ -14,6 +14,9 @@ using System.Text;
 using System.Net.Http.Headers;
 using System.Threading.RateLimiting;
 using Serilog;
+using dotenv.net;
+
+DotEnv.Load();
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -33,6 +36,8 @@ builder.Host.UseSerilog();
 // 1. Database Configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.Configure<Kemora.Application.DTOs.EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 // 2. Identity (User Management) Config
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -90,10 +95,14 @@ builder.Services.AddScoped<Kemora.Domain.Interfaces.IUserRepository, Kemora.Infr
 
 // Application Services
 builder.Services.AddScoped<Kemora.Domain.Interfaces.ITokenService, Kemora.Infrastructure.Services.TokenService>();
-builder.Services.AddScoped<Kemora.Domain.Interfaces.IPlaceService, Kemora.Infrastructure.Services.OverpassPlacesService>();
+
+builder.Services.AddScoped<Kemora.Domain.Interfaces.IPlacesDataService, Kemora.Infrastructure.Services.GooglePlacesService>();
+builder.Services.AddSingleton<Kemora.Domain.Interfaces.IAiService, Kemora.Infrastructure.Services.OpenRouterAiService>();
 builder.Services.AddScoped<Kemora.Application.Interfaces.IAuthService, Kemora.Infrastructure.Services.AuthService>();
 builder.Services.AddScoped<Kemora.Application.Interfaces.IBadgeService, Kemora.Application.Services.BadgeService>();
-builder.Services.AddScoped<Kemora.Application.Interfaces.IEmailService, Kemora.Infrastructure.Services.LoggerEmailService>();
+builder.Services.AddScoped<Kemora.Application.Interfaces.IChatService, Kemora.Application.Services.ChatService>();
+// builder.Services.AddScoped<Kemora.Domain.Interfaces.IWikipediaService, Kemora.Infrastructure.Services.WikipediaService>();
+builder.Services.AddScoped<Kemora.Application.Interfaces.IEmailService, Kemora.Infrastructure.Services.SmtpEmailService>();
 builder.Services.AddScoped<Kemora.Application.Interfaces.IImageService, Kemora.Infrastructure.Services.CloudinaryImageService>();
 builder.Services.AddScoped<Kemora.Application.Interfaces.ICommentService, Kemora.Application.Services.CommentService>();
 builder.Services.AddScoped<Kemora.Application.Interfaces.IEventService, Kemora.Application.Services.EventService>();
@@ -109,6 +118,10 @@ builder.Services.AddScoped<Kemora.Application.Interfaces.IReviewService, Kemora.
 builder.Services.AddScoped<Kemora.Application.Interfaces.ITripService, Kemora.Application.Services.TripService>();
 builder.Services.AddScoped<Kemora.Application.Interfaces.ITripPlannerService, Kemora.Application.Services.TripPlannerService>();
 builder.Services.AddScoped<Kemora.Application.Interfaces.IUserManagementService, Kemora.Infrastructure.Services.UserManagementService>();
+builder.Services.AddScoped<Kemora.Domain.Interfaces.IStoryRepository, Kemora.Infrastructure.Repositories.StoryRepository>();
+builder.Services.AddScoped<Kemora.Application.Interfaces.IStoryService, Kemora.Application.Services.StoryService>();
+builder.Services.AddScoped<Kemora.Application.Interfaces.IBadgeAwardService, Kemora.Infrastructure.Services.BadgeAwardService>();
+builder.Services.AddScoped<Kemora.Application.Interfaces.IPlacesSyncService, Kemora.Infrastructure.Services.GooglePlacesSyncService>();
 
 // SignalR
 builder.Services.AddSignalR();
@@ -150,20 +163,26 @@ builder.Services.AddAutoMapper(cfg => {
     cfg.AddProfile<Kemora.Application.Mapping.MappingProfile>();
 });
 
-// Named HttpClient for OpenStreetMap Overpass API (free, no key required)
-builder.Services.AddHttpClient("Overpass", client =>
+builder.Services.AddHttpClient("GooglePlaces", client =>
 {
-    client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("application/json"));
-    client.Timeout = TimeSpan.FromSeconds(60);
+    client.Timeout = TimeSpan.FromSeconds(30);
 });
 
-// Named HttpClient for local AI model (generous timeout for inference)
-builder.Services.AddHttpClient("LocalAI", client =>
+// Named client used by PhotosController.ProxyPhoto to stream photo media from the
+// Google Places API (longer timeout for image downloads).
+builder.Services.AddHttpClient("GooglePlacesProxy", client =>
 {
-    client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("application/json"));
-    client.Timeout = TimeSpan.FromMinutes(5);
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+
+
+builder.Services.AddHttpClient("OpenRouter", client =>
+{
+    client.BaseAddress = new Uri("https://openrouter.ai/api/v1/");
+    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    client.DefaultRequestHeaders.Add("X-OpenRouter-Title", "Kemora Travel Planner");
+    client.Timeout = TimeSpan.FromMinutes(3);
 });
 
 builder.Services.AddControllers()
@@ -255,7 +274,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5173", "https://kemora.app")
+        policy.SetIsOriginAllowed(_ => true) // Allows Flutter Web's random localhost ports
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -276,9 +295,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Skip HTTPS redirection in development so Flutter Web (Chrome) can call HTTP port 5299
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors("AllowFrontend");
+
+// Serve uploaded images from wwwroot/uploads as static files
+app.UseStaticFiles();
 
 // IMPORTANT: Authentication must come BEFORE Authorization
 app.UseAuthentication();
@@ -296,7 +322,43 @@ using (var scope = app.Services.CreateScope())
 
     if (app.Environment.IsDevelopment())
     {
+    }
+    
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    try 
+    {
+        Log.Information("DATABASE STARTUP: Applying pending migrations...");
+        await context.Database.MigrateAsync();
+
+        Log.Information("DATABASE STARTUP: Ensuring base data is seeded...");
         await DataSeeder.SeedAsync(scope.ServiceProvider);
+
+        // Execute SQL script if it exists (for migrating local data to remote)
+        string scriptPath = Path.Combine(app.Environment.WebRootPath ?? "wwwroot", "db_script.sql");
+        if (System.IO.File.Exists(scriptPath))
+        {
+            Log.Information("Found db_script.sql. Executing...");
+            var script = System.IO.File.ReadAllText(scriptPath);
+            var batches = System.Text.RegularExpressions.Regex.Split(script, @"^\s*GO\s*$", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline);
+            foreach (var batch in batches)
+            {
+                if (string.IsNullOrWhiteSpace(batch)) continue;
+                try {
+                    context.Database.ExecuteSqlRaw(batch);
+                } catch (Exception ex) {
+                    Log.Error(ex, "Error executing SQL batch:\n" + (batch.Length > 100 ? batch.Substring(0, 100) : batch));
+                }
+            }
+            System.IO.File.Delete(scriptPath);
+            Log.Information("db_script.sql executed and deleted.");
+        }
+        
+        var placeCount = await context.Places.CountAsync();
+        Log.Information("DATABASE STARTUP: Ready. Current Place count: {Count}", placeCount);
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "DATABASE STARTUP: Error during seeding check");
     }
 }
 

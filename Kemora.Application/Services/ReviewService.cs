@@ -46,8 +46,8 @@ namespace Kemora.Application.Services
         {
             if (!await _placeRepo.ExistsAsync(placeId)) return new PagedResult<ReviewResponseDto>();
 
-            var reviews = await _reviewRepo.GetByPlaceIdAsync(placeId, page, pageSize);
-            var count = await _reviewRepo.GetCountByPlaceIdAsync(placeId);
+            var reviews = await _reviewRepo.GetPagedAsync(r => r.PlaceID == placeId, q => q.OrderByDescending(r => r.ReviewID), page, pageSize);
+            var count = await _reviewRepo.CountAsync(r => r.PlaceID == placeId);
             return new PagedResult<ReviewResponseDto>
             {
                 Items = _mapper.Map<List<ReviewResponseDto>>(reviews),

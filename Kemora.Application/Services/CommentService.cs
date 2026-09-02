@@ -63,8 +63,8 @@ namespace Kemora.Application.Services
         {
             if (!await _postRepo.ExistsAsync(postId)) return new PagedResult<CommentResponseDto>();
             
-            var comments = await _commentRepo.GetByPostIdAsync(postId, page, pageSize);
-            var count = await _commentRepo.GetCountByPostIdAsync(postId);
+            var comments = await _commentRepo.GetPagedAsync(c => c.PostID == postId, q => q.OrderByDescending(c => c.CreatedAt), page, pageSize, c => c.User, c => c.Media, c => c.Reactions);
+            var count = await _commentRepo.CountAsync(c => c.PostID == postId);
             return new PagedResult<CommentResponseDto>
             {
                 Items = _mapper.Map<List<CommentResponseDto>>(comments),

@@ -13,11 +13,11 @@ namespace Kemora.Infrastructure.Services
 
         public CloudinaryImageService(IConfiguration config)
         {
-            var acc = new Account(
-                config["Cloudinary:CloudName"] ?? "dddhzbrqy",
-                config["Cloudinary:ApiKey"] ?? "269465313852975",
-                config["Cloudinary:ApiSecret"] ?? "J9XF2lHIpe4IYwY6HjGt_5kedJ8"
-            );
+            var cloudName = config["Cloudinary:CloudName"] ?? throw new ArgumentNullException("Cloudinary:CloudName is missing from configuration");
+            var apiKey = config["Cloudinary:ApiKey"] ?? throw new ArgumentNullException("Cloudinary:ApiKey is missing from configuration");
+            var apiSecret = config["Cloudinary:ApiSecret"] ?? throw new ArgumentNullException("Cloudinary:ApiSecret is missing from configuration");
+
+            var acc = new Account(cloudName, apiKey, apiSecret);
             _cloudinary = new Cloudinary(acc);
         }
 
@@ -36,6 +36,20 @@ namespace Kemora.Infrastructure.Services
             }
 
             return null;
+        }
+
+        public async Task<string?> UploadImageFromUrlAsync(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return null;
+
+            var uploadParams = new ImageUploadParams
+            {
+                File = new FileDescription(url),
+                Transformation = new Transformation().Height(1000).Width(1000).Crop("limit")
+            };
+            
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+            return uploadResult.SecureUrl?.ToString();
         }
     }
 }

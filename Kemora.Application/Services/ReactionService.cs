@@ -9,15 +9,17 @@ namespace Kemora.Application.Services
 {
     public class ReactionService : IReactionService
     {
-        private readonly IReactionRepository _reactionRepo;
+        private readonly IRepository<PostReaction> _postReactionRepo;
+        private readonly IRepository<CommentReaction> _commentReactionRepo;
         private readonly IPostRepository _postRepo;
         private readonly ICommentRepository _commentRepo;
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationService _notificationService;
 
-        public ReactionService(IReactionRepository reactionRepo, IPostRepository postRepo, ICommentRepository commentRepo, IUnitOfWork unitOfWork, INotificationService notificationService)
+        public ReactionService(IRepository<PostReaction> postReactionRepo, IRepository<CommentReaction> commentReactionRepo, IPostRepository postRepo, ICommentRepository commentRepo, IUnitOfWork unitOfWork, INotificationService notificationService)
         {
-            _reactionRepo = reactionRepo;
+            _postReactionRepo = postReactionRepo;
+            _commentReactionRepo = commentReactionRepo;
             _postRepo = postRepo;
             _commentRepo = commentRepo;
             _unitOfWork = unitOfWork;
@@ -28,7 +30,7 @@ namespace Kemora.Application.Services
         {
             if (!await _postRepo.ExistsAsync(postId)) return false;
 
-            var existing = await _reactionRepo.GetPostReactionAsync(postId, userId);
+            var existing = await _postReactionRepo.FirstOrDefaultAsync(r => r.PostID == postId && r.UserID == userId);
             if (dto.Action == "add")
             {
                 if (existing != null)
@@ -38,7 +40,7 @@ namespace Kemora.Application.Services
                 }
                 else
                 {
-                    await _reactionRepo.AddPostReactionAsync(new PostReaction
+                    await _postReactionRepo.AddAsync(new PostReaction
                     {
                         PostID = postId, UserID = userId, ReactionType = dto.ReactionType, ReactedAt = DateTime.UtcNow
                     });
@@ -46,7 +48,7 @@ namespace Kemora.Application.Services
             }
             else
             {
-                if (existing != null) _reactionRepo.RemovePostReaction(existing);
+                if (existing != null) _postReactionRepo.Remove(existing);
             }
 
             await _unitOfWork.CommitAsync();
@@ -69,7 +71,7 @@ namespace Kemora.Application.Services
         {
             if (!await _commentRepo.ExistsAsync(commentId)) return false;
 
-            var existing = await _reactionRepo.GetCommentReactionAsync(commentId, userId);
+            var existing = await _commentReactionRepo.FirstOrDefaultAsync(r => r.CommentID == commentId && r.UserID == userId);
             if (dto.Action == "add")
             {
                 if (existing != null)
@@ -79,7 +81,7 @@ namespace Kemora.Application.Services
                 }
                 else
                 {
-                    await _reactionRepo.AddCommentReactionAsync(new CommentReaction
+                    await _commentReactionRepo.AddAsync(new CommentReaction
                     {
                         CommentID = commentId, UserID = userId, ReactionType = dto.ReactionType, ReactedAt = DateTime.UtcNow
                     });
@@ -87,7 +89,7 @@ namespace Kemora.Application.Services
             }
             else
             {
-                if (existing != null) _reactionRepo.RemoveCommentReaction(existing);
+                if (existing != null) _commentReactionRepo.Remove(existing);
             }
 
             await _unitOfWork.CommitAsync();

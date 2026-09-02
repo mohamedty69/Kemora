@@ -1,0 +1,49 @@
+name: Deploy ASP.NET Core API to MonsterASP
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'Kemora.Api/**'
+      - 'Kemora.Application/**'
+      - 'Kemora.Domain/**'
+      - 'Kemora.Infrastructure/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore Kemora.sln
+
+    - name: Create Production AppSettings
+      run: |
+        echo '{
+          "ConnectionStrings": {
+            "DefaultConnection": "Server=${{ secrets.DB_SERVER }}; Database=${{ secrets.DB_NAME }}; User Id=${{ secrets.DB_USER }}; Password=${{ secrets.DB_PASSWORD }}; Encrypt=False; MultipleActiveResultSets=True;"
+          }
+        }' > Kemora.Api/appsettings.Production.json
+
+    - name: Build and Publish
+      run: dotnet publish Kemora.Api/Kemora.Api.csproj -c Release -o ./publish
+
+    - name: Deploy to MonsterASP via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./publish/
+        server-dir: /wwwroot/
+        dangerous-clean-slate: false

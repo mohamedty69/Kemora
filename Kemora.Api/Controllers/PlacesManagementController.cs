@@ -206,5 +206,28 @@ namespace Kemora.Api.Controllers
             if (await _service.DeletePlaceAsync(id)) return NoContent();
             return NotFound();
         }
+
+        /// <summary>
+        /// Upload a picture for a place.
+        /// </summary>
+        [HttpPost("places/{id}/image")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UploadPlacePicture(int id, Microsoft.AspNetCore.Http.IFormFile file)
+        {
+            if (file == null || file.Length == 0) return BadRequest("No file provided.");
+            
+            using var stream = file.OpenReadStream();
+            var (succeeded, error, url) = await _service.UploadPlacePictureAsync(id, stream, file.FileName);
+            
+            if (!succeeded)
+            {
+                if (error == "Place not found.") return NotFound(error);
+                return BadRequest(error);
+            }
+            
+            return Ok(new { Url = url });
+        }
     }
 }

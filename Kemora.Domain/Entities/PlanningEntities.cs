@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -25,21 +25,18 @@ namespace Kemora.Domain.Entities
         public Place Place { get; set; }
         public DateTime VisitDate { get; set; }
         public string? Notes { get; set; }
+        public bool IsVisited { get; set; }
     }
 
-    // --- AI CACHING LAYERS ---
-    public class TripTemplate
+    public class PrecomputedTripPlan
     {
-        public int Id { get; set; }
-        public string Signature { get; set; } // "Cairo_3Days_Budget"
-        public ICollection<TripTemplateItem> Items { get; set; }
-    }
-
-    public class TripTemplateItem
-    {
-        public int Id { get; set; }
-        public int TripTemplateId { get; set; }
-        public int PlaceId { get; set; }
-        public int DayNumber { get; set; }
+        [Key] public int Id { get; set; }
+        
+        [MaxLength(255)]
+        public string CacheKey { get; set; }
+        
+        public string ItineraryJson { get; set; }
+        public string PlacesJson { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

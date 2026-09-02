@@ -11,6 +11,8 @@ namespace Kemora.Application.DTOs
         public string Content { get; set; } = string.Empty;
 
         public List<CreatePostMediaDto>? Media { get; set; }
+
+        public int? LocationId { get; set; }
     }
 
     public class CreatePostMediaDto
@@ -46,9 +48,13 @@ namespace Kemora.Application.DTOs
         public DateTime CreatedAt { get; set; }
         public string AuthorId { get; set; } = string.Empty;
         public string AuthorName { get; set; } = string.Empty;
+        public string? AuthorProfilePicture { get; set; }
         public List<PostMediaResponseDto> Media { get; set; } = [];
         public int ReactionCount { get; set; }
         public int CommentCount { get; set; }
+        public bool IsLikedByMe { get; set; }
+        public int? LocationId { get; set; }
+        public string? LocationName { get; set; }
     }
 
     public class PostDetailResponseDto : PostListResponseDto

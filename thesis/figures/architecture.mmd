@@ -1,0 +1,50 @@
+flowchart TD
+    subaxis
+    
+    %% Client Tier
+    subgraph Client [Client Tier]
+        App[Kemora Flutter App]
+    end
+
+    %% API Tier
+    subgraph APITier [API Gateway & Application Tier]
+        API[ASP.NET Core 10 Web API]
+        Auth[Authentication & Authorization]
+        Controllers[API Controllers]
+        Services[Application Services]
+        
+        API --> Auth
+        API --> Controllers
+        Controllers --> Services
+    end
+
+    %% Infrastructure Tier
+    subgraph Infra [Infrastructure & Data Tier]
+        EF[Entity Framework Core 10]
+        SQL[(SQL Server LocalDB)]
+        Cache[(Memory Cache)]
+        
+        EF --> SQL
+    end
+
+    %% External Services
+    subgraph External [External Integrations]
+        Google[Google Maps Places API]
+        Cloudinary[Cloudinary Image Hosting]
+        WisdomGate[WisdomGate AI / OpenRouter]
+        SMTP[Brevo SMTP / Emails]
+        Wiki[Wikipedia API]
+    end
+
+    %% Connections
+    App <-->|HTTPS / REST| API
+    App <-->|SignalR| API
+    
+    Services <--> EF
+    Services <--> Cache
+    
+    Services --> Google
+    Services --> Cloudinary
+    Services --> WisdomGate
+    Services --> SMTP
+    Services --> Wiki

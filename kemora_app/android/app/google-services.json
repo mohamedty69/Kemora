@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "953085127017",
+    "project_id": "kemora-8e6db",
+    "storage_bucket": "kemora-8e6db.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:953085127017:android:ffbe9fbdc1270be2bf75f8",
+        "android_client_info": {
+          "package_name": "com.example.kemora"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "953085127017-huk1fjcp043npu2u1b607p3q7un0oui1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.kemora",
+            "certificate_hash": "a7f7a18259e030eed833b6f16d0b4b4b340dbda1"
+          }
+        },
+        {
+          "client_id": "953085127017-rgvuiei729ilon87t08v3un4ng7suao3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_8zZclZXOuoN2yCcD7PF9AqQSwnqHsfM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "953085127017-rgvuiei729ilon87t08v3un4ng7suao3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

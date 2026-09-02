@@ -36,13 +36,13 @@ namespace Kemora.Application.Services
 
         public async Task<List<EventResponseDto>> GetUpcomingEventsAsync()
         {
-            var events = await _eventRepo.GetUpcomingAsync(10);
+            var events = await _eventRepo.GetPagedAsync(e => e.EndDate >= System.DateTime.UtcNow, q => q.OrderBy(e => e.StartDate), 1, 10);
             return _mapper.Map<List<EventResponseDto>>(events);
         }
 
         public async Task<List<EventResponseDto>> GetPlaceEventsAsync(int placeId)
         {
-            var events = await _eventRepo.GetByPlaceIdAsync(placeId);
+            var events = await _eventRepo.GetSortedAsync(e => e.PlaceID == placeId, q => q.OrderByDescending(e => e.StartDate));
             return _mapper.Map<List<EventResponseDto>>(events);
         }
 

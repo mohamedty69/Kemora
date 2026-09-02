@@ -3,6 +3,7 @@ using Kemora.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Kemora.Api.Controllers
@@ -18,11 +19,13 @@ namespace Kemora.Api.Controllers
     {
         private readonly IPlacePublicService _placeService;
         private readonly ITripPlannerService _tripPlannerService;
+        private readonly IBadgeAwardService _badgeAwardService;
 
-        public PlacesController(IPlacePublicService placeService, ITripPlannerService tripPlannerService)
+        public PlacesController(IPlacePublicService placeService, ITripPlannerService tripPlannerService, IBadgeAwardService badgeAwardService)
         {
             _placeService = placeService;
             _tripPlannerService = tripPlannerService;
+            _badgeAwardService = badgeAwardService;
         }
 
         /// <summary>
@@ -35,15 +38,17 @@ namespace Kemora.Api.Controllers
         /// <param name="pageSize">Items per page (default: 20).</param>
         [HttpGet]
         [AllowAnonymous]
-        [ResponseCache(Duration = 60)]
+        [ResponseCache(Duration = 60, VaryByQueryKeys = new[] { "governorateId", "categoryId", "categoryName", "search", "page", "pageSize" })]
         [ProducesResponseType(typeof(PagedResult<PlacePublicDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<PagedResult<PlacePublicDto>>> GetPlaces(
             [FromQuery] int? governorateId,
             [FromQuery] int? categoryId,
+            [FromQuery] string? categoryName,
             [FromQuery] string? search,
+            [FromQuery] string? sortBy,
             [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            return Ok(await _placeService.GetPlacesAsync(governorateId, categoryId, search, page, pageSize));
+            return Ok(await _placeService.GetPlacesAsync(governorateId, categoryId, categoryName, search, sortBy, page, pageSize));
         }
 
         /// <summary>
@@ -59,6 +64,13 @@ namespace Kemora.Api.Controllers
         {
             var place = await _placeService.GetPlaceDetailAsync(id);
             if (place == null) return NotFound();
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                await _badgeAwardService.CheckExplorerAchievementAsync(userId);
+            }
+
             return Ok(place);
         }
 
@@ -75,6 +87,63 @@ namespace Kemora.Api.Controllers
             var result = await _tripPlannerService.GenerateTripPlanAsync(request);
             if (result == null) return BadRequest("Could not generate trip plan.");
             return Ok(result);
+        }
+
+        /// <summary>
+        /// Get all governorates in Egypt.
+        /// </summary>
+        [HttpGet("governorates")]
+        [AllowAnonymous]
+        [ResponseCache(Duration = 3600)]
+        public async Task<ActionResult<List<GovernorateDto>>> GetGovernorates()
+        {
+            return Ok(await _placeService.GetGovernoratesAsync());
+        }
+
+        /// <summary>
+        /// Get the top 20 featured places across Egypt.
+        /// </summary>
+        [HttpGet("top")]
+        [AllowAnonymous]
+        [ResponseCache(Duration = 1800)]
+        public async Task<ActionResult<List<PlacePublicDto>>> GetTopPlaces()
+        {
+            return Ok(await _placeService.GetTopPlacesAsync());
+        }
+
+        /// <summary>
+        /// Request an alternative for a specific place in a trip plan.
+        /// </summary>
+        /// <param name="currentPlaceName">The name of the place to swap.</param>
+        /// <param name="preferences">User's preferences.</param>
+        [HttpGet("swap")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SwapPlace([FromQuery] string currentPlaceName, [FromQuery] string preferences)
+        {
+            if (string.IsNullOrWhiteSpace(currentPlaceName))
+                return BadRequest(new { message = "currentPlaceName is required." });
+
+            var result = await _tripPlannerService.SwapPlaceAsync(currentPlaceName, preferences ?? "");
+            
+            // The AI returns a JSON string — parse it to return as a proper JSON object
+            try
+            {
+                var parsed = System.Text.Json.JsonDocument.Parse(result);
+                
+                // If the AI returned { "newActivity": { ... } }, extract the inner object
+                if (parsed.RootElement.TryGetProperty("newActivity", out var newActivity))
+                {
+                    return Content(newActivity.GetRawText(), "application/json");
+                }
+                
+                // Otherwise return the full parsed result
+                return Content(result, "application/json");
+            }
+            catch
+            {
+                // If parsing fails, return a fallback
+                return Ok(new { place = "Alternative Place", description = result, time = "09:00" });
+            }
         }
     }
 }

@@ -13,15 +13,19 @@ namespace Kemora.Application.Services
     {
         private readonly IBadgeRepository _badgeRepo;
         private readonly IUserRepository _userRepo;
+        private readonly IRepository<UserBadge> _userBadgeRepo;
+        private readonly IRepository<UserPoint> _userPointRepo;
         private readonly IMapper _mapper;
 
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICacheService _cacheService;
 
-        public BadgeService(IBadgeRepository badgeRepo, IUserRepository userRepo, IMapper mapper, IUnitOfWork unitOfWork, ICacheService cacheService)
+        public BadgeService(IBadgeRepository badgeRepo, IUserRepository userRepo, IRepository<UserBadge> userBadgeRepo, IRepository<UserPoint> userPointRepo, IMapper mapper, IUnitOfWork unitOfWork, ICacheService cacheService)
         {
             _badgeRepo = badgeRepo;
             _userRepo = userRepo;
+            _userBadgeRepo = userBadgeRepo;
+            _userPointRepo = userPointRepo;
             _mapper = mapper;
             _unitOfWork = unitOfWork;
             _cacheService = cacheService;
@@ -43,7 +47,7 @@ namespace Kemora.Application.Services
 
         public async Task<List<UserBadgeResponseDto>> GetMyBadgesAsync(string userId)
         {
-            var ub = await _badgeRepo.GetUserBadgesAsync(userId);
+            var ub = await _userBadgeRepo.FindAsync(u => u.UserID == userId, u => u.Badge);
             return _mapper.Map<List<UserBadgeResponseDto>>(ub);
         }
 
@@ -52,12 +56,8 @@ namespace Kemora.Application.Services
             var user = await _userRepo.GetByIdAsync(userId);
             if (user == null) return new PointsSummaryDto();
 
-            var history = await _userRepo.GetPointHistoryAsync(userId);
-            var resultHistory = history.Select(h => new PointHistoryDto
-            {
-                PointsGained = h.PointsGained, GainedAt = h.GainedAt,
-                SourcePlaceName = h.SourcePlace?.Name
-            }).ToList();
+            var history = await _userPointRepo.GetSortedAsync(up => up.UserID == userId, q => q.OrderByDescending(up => up.GainedAt), up => up.SourcePlace);
+            var resultHistory = _mapper.Map<List<PointHistoryDto>>(history);
 
             return new PointsSummaryDto { TotalPoints = user.TotalPoints, History = resultHistory };
         }
@@ -70,11 +70,15 @@ namespace Kemora.Application.Services
             if (cachedLeaderboard != null)
                 return cachedLeaderboard;
 
-            var users = await _badgeRepo.GetLeaderboardAsync(top);
-            var leaderboard = users.Select((u, i) => new LeaderboardEntryDto
+            var users = await _userRepo.GetPagedAsync(null, q => q.OrderByDescending(u => u.TotalPoints), 1, top);
+            var leaderboard = new List<LeaderboardEntryDto>();
+            int rank = 1;
+            foreach (var u in users)
             {
-                Rank = i + 1, UserId = u.Id, FullName = u.FullName ?? "User", TotalPoints = u.TotalPoints
-            }).ToList();
+                var entry = _mapper.Map<LeaderboardEntryDto>(u);
+                entry.Rank = rank++;
+                leaderboard.Add(entry);
+            }
 
             _cacheService.Set(cacheKey, leaderboard, System.TimeSpan.FromMinutes(10));
             return leaderboard;

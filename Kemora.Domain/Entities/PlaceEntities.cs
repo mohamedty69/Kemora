@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -10,6 +10,14 @@ namespace Kemora.Domain.Entities
         public int GovernorateID { get; set; }
         public string Name { get; set; }
         public string Region { get; set; }
+        public string? ImageURL { get; set; }
+        
+        [Column(TypeName = "decimal(10, 8)")]
+        public decimal Latitude { get; set; }
+
+        [Column(TypeName = "decimal(11, 8)")]
+        public decimal Longitude { get; set; }
+
         public ICollection<Place> Places { get; set; }
     }
 
@@ -37,10 +45,10 @@ namespace Kemora.Domain.Entities
     {
         [Key]
         public int PlaceID { get; set; }
-        public string? GooglePlaceID { get; set; }
+        public string? GooglePlaceId { get; set; }
         public string Name { get; set; }
-        public string Description { get; set; }
-        public string Address { get; set; }
+        public string? Description { get; set; }
+        public string? Address { get; set; }
 
         [Column(TypeName = "decimal(10, 8)")]
         public decimal Latitude { get; set; }
@@ -58,12 +66,21 @@ namespace Kemora.Domain.Entities
         public string? OpeningHoursJSON { get; set; }
         public string? MainImageURL { get; set; }
 
-        // Foreign Keys
-        public int GovernorateID { get; set; }
-        public Governorate Governorate { get; set; }
+        // Foreign Keys — nullable to support AI-generated places that may not have full metadata
+        public int? GovernorateID { get; set; }
+        public Governorate? Governorate { get; set; }
 
-        public int PlaceTypeID { get; set; }
-        public PlaceType PlaceType { get; set; }
+        public int? PlaceTypeID { get; set; }
+        public PlaceType? PlaceType { get; set; }
+
+        public DateTime? LastEnrichedAt { get; set; }
+        public string? Source { get; set; } // "seed", "google", "manual"
+        
+        [StringLength(100)]
+        public string? GoogleDataId { get; set; } // SerpApi Maps data_id
+
+        public string? GoogleMapsUrl { get; set; }
+        public string? AdditionalPhotoUrlsJSON { get; set; }
 
         // Relationships
         public ICollection<Photo> Photos { get; set; }
@@ -86,6 +103,7 @@ namespace Kemora.Domain.Entities
         public string AuthorName { get; set; }
         public int Rating { get; set; }
         public string Text { get; set; }
+        public string? Source { get; set; } // "Google", "Kemora"
         public int PlaceID { get; set; }
         public Place Place { get; set; }
     }

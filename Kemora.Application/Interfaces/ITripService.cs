@@ -15,5 +15,6 @@ namespace Kemora.Application.Interfaces
         Task<TripPlaceResponseDto?> AddPlaceAsync(string userId, int tripId, AddTripPlaceDto dto);
         Task<bool> UpdatePlaceAsync(string userId, int tripId, int tpId, UpdateTripPlaceDto dto);
         Task<bool> RemovePlaceAsync(string userId, int tripId, int tpId);
+        Task<TripDetailDto> SaveAIPlanAsync(string userId, SaveAIPlanDto dto);
     }
 }

@@ -4,11 +4,7 @@ using System.Threading.Tasks;
 
 namespace Kemora.Domain.Interfaces
 {
-    public interface IUserRepository
+    public interface IUserRepository : IRepository<ApplicationUser>
     {
-        Task<ApplicationUser?> GetByIdAsync(string id);
-        Task<IEnumerable<UserPoint>> GetPointHistoryAsync(string userId);
-        Task AddPointsAsync(UserPoint point);
-
     }
 }

@@ -4,6 +4,7 @@ using Kemora.Application.Interfaces;
 using Kemora.Domain.Entities;
 using Kemora.Domain.Interfaces;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Kemora.Application.Services
@@ -27,7 +28,7 @@ namespace Kemora.Application.Services
         public async Task<bool> AddFavoriteAsync(string userId, int placeId)
         {
             if (!await _placeRepo.ExistsAsync(placeId)) return false;
-            if (await _favoriteRepo.IsFavoritedAsync(userId, placeId)) return false;
+            if (await _favoriteRepo.IsFavoritedAsync(userId, placeId)) return true;
 
             await _favoriteRepo.AddAsync(new UserFavorite { UserID = userId, PlaceID = placeId });
             await _unitOfWork.CommitAsync();
@@ -37,17 +38,18 @@ namespace Kemora.Application.Services
         public async Task<bool> RemoveFavoriteAsync(string userId, int placeId)
         {
             var fav = await _favoriteRepo.GetAsync(userId, placeId);
-            if (fav == null) return false;
+            if (fav == null) return true;
 
             _favoriteRepo.Remove(fav);
             await _unitOfWork.CommitAsync();
             return true;
         }
 
-        public async Task<List<FavoriteResponseDto>> GetMyFavoritesAsync(string userId)
+        public async Task<List<PlacePublicDto>> GetMyFavoritesAsync(string userId)
         {
             var favs = await _favoriteRepo.GetByUserIdAsync(userId);
-            return _mapper.Map<List<FavoriteResponseDto>>(favs);
+            var places = favs.Select(f => f.Place).ToList();
+            return _mapper.Map<List<PlacePublicDto>>(places);
         }
 
         public async Task<FavoriteCheckDto> CheckFavoriteAsync(string userId, int placeId)

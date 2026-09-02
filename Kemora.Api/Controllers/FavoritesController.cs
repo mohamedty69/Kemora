@@ -58,8 +58,8 @@ namespace Kemora.Api.Controllers
         /// Get all favorite places for the authenticated user.
         /// </summary>
         [HttpGet]
-        [ProducesResponseType(typeof(List<FavoriteResponseDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<FavoriteResponseDto>>> GetMyFavorites()
+        [ProducesResponseType(typeof(List<PlacePublicDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<PlacePublicDto>>> GetMyFavorites()
         {
             return Ok(await _favoriteService.GetMyFavoritesAsync(GetUserId()));
         }

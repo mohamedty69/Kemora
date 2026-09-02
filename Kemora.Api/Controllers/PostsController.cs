@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+
+using Microsoft.Extensions.Logging;
 
 namespace Kemora.Api.Controllers
 {
@@ -18,23 +21,77 @@ namespace Kemora.Api.Controllers
     public class PostsController : ControllerBase
     {
         private readonly IPostService _postService;
+        private readonly IImageService _imageService;
+        private readonly IBadgeAwardService _badgeAwardService;
+        private readonly ILogger<PostsController> _logger;
 
-        public PostsController(IPostService postService)
+        public PostsController(IPostService postService, IImageService imageService, IBadgeAwardService badgeAwardService, ILogger<PostsController> logger)
         {
             _postService = postService;
+            _imageService = imageService;
+            _badgeAwardService = badgeAwardService;
+            _logger = logger;
         }
 
-        private string GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         /// <summary>
         /// Create a new community post.
         /// </summary>
         [HttpPost]
         [ProducesResponseType(typeof(PostListResponseDto), StatusCodes.Status200OK)]
-        public async Task<ActionResult<PostListResponseDto>> CreatePost([FromBody] CreatePostDto dto)
+        public async Task<ActionResult<PostListResponseDto>> CreatePost(
+            [FromForm] string content,
+            [FromForm] int? locationId,
+            [FromForm] IFormFile? mediaFile)
         {
-            var post = await _postService.CreateAsync(GetUserId(), dto);
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var dto = new CreatePostDto
+            {
+                Content = content,
+                LocationId = locationId
+            };
+
+            if (mediaFile != null && mediaFile.Length > 0)
+            {
+                using var stream = mediaFile.OpenReadStream();
+                var imageUrl = await _imageService.UploadImageAsync(stream, mediaFile.FileName);
+                if (!string.IsNullOrEmpty(imageUrl))
+                {
+                    dto.Media = new List<CreatePostMediaDto>
+                    {
+                        new CreatePostMediaDto { MediaURL = imageUrl, MediaType = "Image" }
+                    };
+                }
+            }
+
+            var post = await _postService.CreateAsync(userId, dto);
+            // Award post achievements
+            await _badgeAwardService.CheckPostAchievementsAsync(userId);
             return Ok(post);
+        }
+
+        /// <summary>
+        /// Upload an image for a post and get its URL.
+        /// </summary>
+        [HttpPost("image")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            if (file == null || file.Length == 0) return BadRequest("No file provided.");
+
+            using var stream = file.OpenReadStream();
+            var imageUrl = await _imageService.UploadImageAsync(stream, file.FileName);
+            
+            if (string.IsNullOrEmpty(imageUrl)) return BadRequest("Failed to upload image.");
+
+            return Ok(new { Url = imageUrl });
         }
 
         /// <summary>
@@ -46,7 +103,7 @@ namespace Kemora.Api.Controllers
         public async Task<ActionResult<PagedResult<PostListResponseDto>>> GetPosts(
             [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            return Ok(await _postService.GetPostsAsync(page, pageSize));
+            return Ok(await _postService.GetPostsAsync(GetCurrentUserId(), page, pageSize));
         }
 
         /// <summary>
@@ -58,7 +115,7 @@ namespace Kemora.Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<PostDetailResponseDto>> GetPost(int id)
         {
-            var p = await _postService.GetPostAsync(id);
+            var p = await _postService.GetPostAsync(id, GetCurrentUserId());
             if (p == null) return NotFound();
             return Ok(p);
         }
@@ -71,7 +128,41 @@ namespace Kemora.Api.Controllers
         public async Task<ActionResult<PagedResult<PostListResponseDto>>> GetMyPosts(
             [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            return Ok(await _postService.GetMyPostsAsync(GetUserId(), page, pageSize));
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+            return Ok(await _postService.GetMyPostsAsync(userId, page, pageSize));
+        }
+
+        /// <summary>
+        /// Toggle a like/reaction on a post.
+        /// </summary>
+        [HttpPost("{id}/like")]
+        public async Task<IActionResult> ToggleLike(int id)
+        {
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            if (await _postService.ToggleLikeAsync(id, userId))
+                return Ok();
+            return NotFound();
+        }
+
+        /// <summary>
+        /// Add a comment to a post.
+        /// </summary>
+        [HttpPost("{id}/comment")]
+        public async Task<ActionResult<CommentResponseDto>> AddComment(int id, [FromBody] CreateCommentDto dto)
+        {
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var comment = await _postService.AddCommentAsync(id, userId, dto);
+            if (comment == null) return NotFound();
+            
+            _logger.LogInformation("CommentCreated: User {UserId} commented on Post {PostId}", userId, id);
+            await _badgeAwardService.CheckCommentAchievementsAsync(userId);
+            
+            return Ok(comment);
         }
 
         /// <summary>
@@ -82,7 +173,10 @@ namespace Kemora.Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdatePost(int id, [FromBody] UpdatePostDto dto)
         {
-            if (await _postService.UpdatePostAsync(id, GetUserId(), dto))
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            if (await _postService.UpdatePostAsync(id, userId, dto))
                 return NoContent();
             return NotFound("Post not found or unauthorized.");
         }
@@ -95,7 +189,10 @@ namespace Kemora.Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeletePost(int id)
         {
-            if (await _postService.DeletePostAsync(id, GetUserId()))
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            if (await _postService.DeletePostAsync(id, userId))
                 return NoContent();
             return NotFound("Post not found or unauthorized.");
         }

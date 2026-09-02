@@ -1,0 +1,28 @@
+﻿UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Cairo_Opera_House%2C_Al_Hurriyah_Park_and_the_Nile_river_%2814797782354%29.jpg/1280px-Cairo_Opera_House%2C_Al_Hurriyah_Park_and_the_Nile_river_%2814797782354%29.jpg' WHERE Name = 'Cairo';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/All_Gizah_Pyramids.jpg/1280px-All_Gizah_Pyramids.jpg' WHERE Name = 'Giza';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/San_Stefano_Grand_Plaza.JPG/1280px-San_Stefano_Grand_Plaza.JPG' WHERE Name = 'Alexandria';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/3/35/LuxorHotelsIbnWalidSt.jpg' WHERE Name = 'Luxor';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Panoramic_view_of_Aswan%2C_Egypt.jpg/1280px-Panoramic_view_of_Aswan%2C_Egypt.jpg' WHERE Name = 'Aswan';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Red_Sea_topographic_map-en.jpg/1280px-Red_Sea_topographic_map-en.jpg' WHERE Name = 'Red Sea';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/South_Sinai.jpg/1280px-South_Sinai.jpg' WHERE Name = 'South Sinai';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Matrouh';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Fayoum';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Dakahlia';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Sharqia';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Qalyubia';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Kafr El Sheikh';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Gharbia';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Monufia';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Beheira';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Beni Suef';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Minya';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Asyut';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Sohag';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Qena';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Damietta';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Port Said';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Suez';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'Ismailia';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'North Sinai';
+UPDATE Governorates SET ImageURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Matrouh_Governorate.jpg/1280px-Matrouh_Governorate.jpg' WHERE Name = 'New Valley';
+

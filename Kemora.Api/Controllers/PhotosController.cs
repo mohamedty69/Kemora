@@ -74,5 +74,40 @@ namespace Kemora.Api.Controllers
             if (await _photoService.DeletePhotoAsync(placeId, photoId)) return NoContent();
             return NotFound();
         }
+        /// <summary>
+        /// Proxies a photo from Google Places API to avoid exposing the API key.
+        /// Served at <c>/api/v{version}/photos/proxy</c> to match the URLs stored on
+        /// places during hydration (see GooglePlacesService.BuildPhotoFetchUrl).
+        /// </summary>
+        [HttpGet("photos/proxy")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
+        public async Task<IActionResult> ProxyPhoto(
+            [FromQuery] string name, 
+            [FromServices] Microsoft.Extensions.Configuration.IConfiguration config, 
+            [FromServices] System.Net.Http.IHttpClientFactory httpClientFactory)
+        {
+            if (string.IsNullOrEmpty(name)) return BadRequest("Photo name is required.");
+
+            // Prefer a real key, ignoring unconfigured "YOUR_..." placeholders.
+            var googleKey = config["Google:ApiKey"];
+            var googleMapsKey = config["GoogleMaps:ApiKey"];
+            var apiKey = (!string.IsNullOrEmpty(googleKey) && !googleKey.Contains("YOUR_")) ? googleKey
+                       : (!string.IsNullOrEmpty(googleMapsKey) && !googleMapsKey.Contains("YOUR_")) ? googleMapsKey
+                       : null;
+            if (string.IsNullOrEmpty(apiKey)) return StatusCode(500, "Google API Key is missing.");
+
+            var url = $"https://places.googleapis.com/v1/{name}/media?key={apiKey}&maxWidthPx=800";
+
+            var client = httpClientFactory.CreateClient("GooglePlacesProxy");
+            var response = await client.GetAsync(url, System.Net.Http.HttpCompletionOption.ResponseHeadersRead);
+
+            if (!response.IsSuccessStatusCode) return StatusCode((int)response.StatusCode, "Failed to fetch image from Google.");
+
+            var contentType = response.Content.Headers.ContentType?.ToString() ?? "image/jpeg";
+            var stream = await response.Content.ReadAsStreamAsync();
+
+            return File(stream, contentType);
+        }
     }
 }

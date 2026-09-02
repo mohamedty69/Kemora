@@ -66,5 +66,20 @@ namespace Kemora.Api.Controllers
             if (profile == null) return NotFound("User not found.");
             return Ok(profile);
         }
+
+        /// <summary>
+        /// Upload a new profile picture.
+        /// </summary>
+        [HttpPost("image")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UploadProfilePicture(Microsoft.AspNetCore.Http.IFormFile file)
+        {
+            if (file == null) return BadRequest("File is required.");
+            using var stream = file.OpenReadStream();
+            var (succeeded, error, url) = await _profileService.UploadProfilePictureAsync(GetUserId(), stream, file.FileName);
+            if (!succeeded) return BadRequest(error);
+            return Ok(new { ProfilePictureUrl = url });
+        }
     }
 }

@@ -24,5 +24,7 @@ namespace Kemora.Application.Interfaces
         Task<PlaceAdminDto?> CreatePlaceAsync(CreatePlaceDto dto);
         Task<bool> UpdatePlaceAsync(int id, UpdatePlaceDto dto);
         Task<bool> DeletePlaceAsync(int id);
+        
+        Task<(bool Succeeded, string? Error, string? Url)> UploadPlacePictureAsync(int placeId, System.IO.Stream imageStream, string fileName);
     }
 }

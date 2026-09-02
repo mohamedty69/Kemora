@@ -4,6 +4,7 @@ using Kemora.Application.Interfaces;
 using Kemora.Application.Services;
 using Kemora.Domain.Entities;
 using Kemora.Domain.Interfaces;
+using AutoMapper;
 using Moq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace Kemora.Tests.Services
         private readonly Mock<INotificationRepository> _mockNotifRepo;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<INotificationPusher> _mockPusher;
+        private readonly Mock<IMapper> _mockMapper;
         private readonly NotificationService _service;
 
         public NotificationServiceTests()
@@ -23,11 +25,13 @@ namespace Kemora.Tests.Services
             _mockNotifRepo = new Mock<INotificationRepository>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockPusher = new Mock<INotificationPusher>();
+            _mockMapper = new Mock<IMapper>();
 
             _service = new NotificationService(
                 _mockNotifRepo.Object,
                 _mockUnitOfWork.Object,
-                _mockPusher.Object);
+                _mockPusher.Object,
+                _mockMapper.Object);
         }
 
         [Fact]
@@ -47,7 +51,7 @@ namespace Kemora.Tests.Services
         public async Task GetUnreadCountAsync_ReturnsCount()
         {
             // Arrange
-            _mockNotifRepo.Setup(r => r.GetUnreadCountAsync("user1")).ReturnsAsync(5);
+            _mockNotifRepo.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Notification, bool>>>())).ReturnsAsync(5);
 
             // Act
             var count = await _service.GetUnreadCountAsync("user1");

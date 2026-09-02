@@ -6,5 +6,6 @@ namespace Kemora.Application.Interfaces
     public interface ITripPlannerService
     {
         Task<TripPlanResponseDto> GenerateTripPlanAsync(TripPlanRequestDto request);
+        Task<string> SwapPlaceAsync(string currentPlaceName, string preferences);
     }
 }

@@ -6,7 +6,5 @@ namespace Kemora.Domain.Interfaces
 {
     public interface IPhotoRepository : IRepository<Photo>
     {
-        Task<IEnumerable<Photo>> GetByPlaceIdAsync(int placeId);
-        Task<Photo?> GetMainPhotoAsync(int placeId);
     }
 }

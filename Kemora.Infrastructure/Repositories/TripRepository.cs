@@ -17,7 +17,9 @@ namespace Kemora.Infrastructure.Repositories
             return await _dbSet
                 .Where(t => t.UserID == userId)
                 .OrderByDescending(t => t.StartDate)
-                .Include(t=>t.TripPlaces)
+                .Include(t => t.TripPlaces)
+                    .ThenInclude(tp => tp.Place)
+                        .ThenInclude(p => p.Governorate)
                 .Skip((page - 1) * size).Take(size)
                 .ToListAsync();
         }
@@ -28,27 +30,10 @@ namespace Kemora.Infrastructure.Repositories
         {
             return await _dbSet
                 .Include(x => x.TripPlaces).ThenInclude(tp => tp.Place)
+                    .ThenInclude(p => p.PlaceType)
+                        .ThenInclude(pt => pt.Category)
                 .FirstOrDefaultAsync(x => x.TripID == id);
         }
 
-        public async Task<TripPlace?> GetTripPlaceAsync(int tripPlaceId)
-        {
-            return await _ctx.TripPlaces.FindAsync(tripPlaceId);
-        }
-
-        public async Task AddTripPlaceAsync(TripPlace tripPlace)
-        {
-            await _ctx.TripPlaces.AddAsync(tripPlace);
-        }
-
-        public void RemoveTripPlace(TripPlace tripPlace)
-        {
-            _ctx.TripPlaces.Remove(tripPlace);
-        }
-        
-        public async Task<bool> TripPlaceExistsAsync(int tripId, int placeId)
-        {
-            return await _ctx.TripPlaces.AnyAsync(tp => tp.TripID == tripId && tp.PlaceID == placeId);
-        }
     }
 }

@@ -40,7 +40,7 @@ namespace Kemora.Infrastructure.Services
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(15), // Short-lived Access Token
+                Expires = DateTime.UtcNow.AddDays(7), // Increased from 15 minutes to 7 days for stable testing
                 SigningCredentials = creds
             };
 

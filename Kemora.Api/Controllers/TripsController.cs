@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace Kemora.Api.Controllers
 {
@@ -18,10 +19,12 @@ namespace Kemora.Api.Controllers
     public class TripsController : ControllerBase
     {
         private readonly ITripService _tripService;
+        private readonly IBadgeAwardService _badgeAwardService;
 
-        public TripsController(ITripService tripService)
+        public TripsController(ITripService tripService, IBadgeAwardService badgeAwardService)
         {
             _tripService = tripService;
+            _badgeAwardService = badgeAwardService;
         }
 
         private string UserId() => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -47,7 +50,11 @@ namespace Kemora.Api.Controllers
         [ProducesResponseType(typeof(PagedResult<TripListDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<PagedResult<TripListDto>>> List([FromQuery] int page = 1, [FromQuery] int ps = 20)
         {
-            return Ok(await _tripService.ListAsync(UserId(), page, ps));
+            var userId = UserId();
+            Log.Information("LOAD_TRIPS: userId={UserId}, page={Page}", userId, page);
+            var result = await _tripService.ListAsync(userId, page, ps);
+            Log.Information("LOAD_TRIPS: Returning {Count} trips for userId={UserId}", result.Items.Count, userId);
+            return Ok(result);
         }
 
         /// <summary>
@@ -72,8 +79,12 @@ namespace Kemora.Api.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateTripDto dto)
         {
-            if (dto.EndDate <= dto.StartDate) return BadRequest("EndDate must be after StartDate.");
+            // Only validate date range when both dates are explicitly provided
+            if (dto.StartDate.HasValue && dto.EndDate.HasValue && dto.EndDate <= dto.StartDate)
+                return BadRequest("EndDate must be after StartDate.");
+            Log.Information("RENAME_TRIP: userId={UserId}, tripId={TripId}, newName={Name}", UserId(), id, dto.Name);
             if (await _tripService.UpdateAsync(UserId(), id, dto)) return NoContent();
+            Log.Warning("RENAME_TRIP: TripID={TripId} not found for userId={UserId}", id, UserId());
             return NotFound();
         }
 
@@ -85,7 +96,13 @@ namespace Kemora.Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(int id)
         {
-            if (await _tripService.DeleteAsync(UserId(), id)) return NoContent();
+            Log.Information("DELETE_TRIP: userId={UserId}, tripId={TripId}", UserId(), id);
+            if (await _tripService.DeleteAsync(UserId(), id))
+            {
+                Log.Information("DELETE_TRIP: TripID={TripId} deleted successfully", id);
+                return NoContent();
+            }
+            Log.Warning("DELETE_TRIP: TripID={TripId} not found for userId={UserId}", id, UserId());
             return NotFound();
         }
 
@@ -124,6 +141,30 @@ namespace Kemora.Api.Controllers
         {
             if (await _tripService.RemovePlaceAsync(UserId(), tripId, tpId)) return NoContent();
             return NotFound();
+        }
+
+        /// <summary>
+        /// Save a complete AI-generated trip plan. Requires authentication.
+        /// </summary>
+        [HttpPost("save-plan")]
+        [ProducesResponseType(typeof(TripDetailDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<TripDetailDto>> SavePlan([FromBody] SaveAIPlanDto dto)
+        {
+            var userId = UserId(); // MUST be authenticated — controller has [Authorize]
+            Log.Information("SAVE_TRIP: userId={UserId}, title={Title}", userId, dto.Title);
+            var t = await _tripService.SaveAIPlanAsync(userId, dto);
+            Log.Information("SAVE_TRIP: Saved as TripID={TripID} for userId={UserId}", t.TripID, userId);
+            
+            // Award achievement badges
+            try {
+                await _badgeAwardService.TryAwardAiPioneerAsync(userId);
+                await _badgeAwardService.TryAwardCityHopperAsync(userId);
+            } catch (Exception ex) {
+                Log.Error(ex, "Failed to award badges after saving plan for user {UserId}", userId);
+            }
+            
+            return CreatedAtAction(nameof(Get), new { id = t.TripID }, t);
         }
     }
 }

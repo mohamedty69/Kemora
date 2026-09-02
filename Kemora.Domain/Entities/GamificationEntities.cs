@@ -8,6 +8,8 @@ namespace Kemora.Domain.Entities
         [Key] public int BadgeID { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        public string IconUrl { get; set; } = string.Empty;
+        public string Criteria { get; set; } = string.Empty;
         public int PointsReward { get; set; }
     }
 

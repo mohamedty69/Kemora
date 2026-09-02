@@ -6,13 +6,18 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<NoWarn>$(NoWarn);1591</NoWarn>
-	</PropertyGroup>
+	  <UserSecretsId>45aef6e4-95dc-4bd6-9174-6c284a93b185</UserSecretsId>
+  </PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Asp.Versioning.Mvc" Version="8.1.1" />
 		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.1" />
 		<PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
+		<PackageReference Include="AutoMapper" Version="16.1.1" />
+		<PackageReference Include="dotenv.net" Version="4.0.1" />
+		<PackageReference Include="MailKit" Version="4.17.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
+		<PackageReference Include="MimeKit" Version="4.17.0" />
 		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
 
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />

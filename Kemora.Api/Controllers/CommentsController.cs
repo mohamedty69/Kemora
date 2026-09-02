@@ -6,6 +6,7 @@ using Asp.Versioning;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Kemora.Api.Controllers
 {
@@ -19,10 +20,14 @@ namespace Kemora.Api.Controllers
     public class CommentsController : ControllerBase
     {
         private readonly ICommentService _commentService;
+        private readonly IBadgeAwardService _badgeAwardService;
+        private readonly ILogger<CommentsController> _logger;
 
-        public CommentsController(ICommentService commentService)
+        public CommentsController(ICommentService commentService, IBadgeAwardService badgeAwardService, ILogger<CommentsController> logger)
         {
             _commentService = commentService;
+            _badgeAwardService = badgeAwardService;
+            _logger = logger;
         }
 
         private string GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -39,6 +44,11 @@ namespace Kemora.Api.Controllers
         {
             var comment = await _commentService.CreateCommentAsync(postId, GetUserId(), dto);
             if (comment == null) return NotFound("Post not found.");
+            
+            _logger.LogInformation("CommentCreated: User {UserId} commented on Post {PostId}", GetUserId(), postId);
+            
+            await _badgeAwardService.CheckCommentAchievementsAsync(GetUserId());
+            
             return Ok(comment);
         }
 

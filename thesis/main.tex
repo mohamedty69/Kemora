@@ -1,0 +1,138 @@
+\documentclass[12pt, a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx} % Load actual image files
+\usepackage{amsmath}  % Math environments (align, equation, etc.)
+\usepackage{amssymb}  % Mathematical symbols including \mathbb (real numbers, etc.)
+\usepackage{hyperref}
+\usepackage[margin=1in]{geometry}
+\usepackage{titlesec}
+\usepackage[nottoc]{tocbibind}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{setspace}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+
+% Standard document spacing
+\usepackage{parskip} % Adds space between paragraphs automatically
+
+
+
+\usepackage[font=small,labelfont=bf]{caption} % Strict technical report formatting for figures and tables
+\usepackage{pdflscape} % For landscape orientation of large tables if necessary
+    
+% Reduce heading sizes to match technical report standards
+\titleformat{\chapter}[display]{\normalfont\fontsize{16}{19}\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{-20pt}{20pt}
+\titleformat{\section}{\normalfont\fontsize{16}{19}\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\fontsize{14}{17}\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\fontsize{12}{15}\bfseries}{\thesubsubsection}{1em}{}
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        
+        % Header with Logos
+        \begin{minipage}[c]{0.25\textwidth}
+            \includegraphics[height=3.5cm, keepaspectratio]{figures/eng.png}
+        \end{minipage}%
+        \hfill
+        \begin{minipage}[c]{0.45\textwidth}
+            \centering
+            \textbf{Port Said University}\\
+            \textbf{Faculty of Engineering}\\
+            \textbf{Department of Computer and Control Engineering}
+        \end{minipage}%
+        \hfill
+        \begin{minipage}[c]{0.25\textwidth}
+            \raggedleft
+            \includegraphics[height=3.5cm, keepaspectratio]{figures/psu.png}
+        \end{minipage}
+
+        \vspace{2cm}
+
+        % Title
+        {\LARGE \textbf{Kemora: An AI-Powered Travel Discovery Platform for Egypt}\par}
+        \vspace{1cm}
+        {\Large \textbf{Graduation Project 2026}\par}
+        \vspace{1cm}
+        
+        % Project Logo Placeholder
+        \includegraphics[width=6.5cm, height=6.5cm, keepaspectratio]{figures/project_logo.png}
+        
+        \vfill
+
+        % Details Table
+        \begin{table}[H]
+            \centering
+            \renewcommand{\arraystretch}{1.8}
+            \begin{tabular}{|>{\raggedright\arraybackslash}p{4.5cm}|>{\raggedright\arraybackslash}p{8cm}|}
+                \hline
+                \textbf{Supervisor} & Dr. Rabab Farouk \\
+                \hline
+                \textbf{Team Members} & 
+                Mohamed Ahmed Mousad \newline
+                Mohamed Khaled Elsayed \newline
+                Zeyad Khaled Elsayed \newline
+                Mohamed Eltabey Elshenawy \newline
+                Ahmed Bassem Elshafey \\
+                \hline
+                \textbf{Department Name} & Department of Computer and Control Engineering \\
+                \hline
+                \textbf{Date of Submission} & July 2026 \\
+                \hline
+            \end{tabular}
+        \end{table}
+
+    \end{center}
+\end{titlepage}
+
+\pagenumbering{roman}
+\addcontentsline{toc}{part}{1. Front Matter (Preliminary Sections)}
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+The tourism industry in Egypt is heavily fragmented, leaving modern travelers struggling to plan logical itineraries while simultaneously discovering off-the-beaten-path ``hidden gems.'' Existing tools either offer generic AI generation with severe geographic hallucinations or simple static maps with no intelligent routing. To solve this, this project presents \textbf{Kemora}, a comprehensive TravelTech ecosystem integrating a high-performance .NET 10 Clean Architecture backend with a 60fps Flutter cross-platform mobile application. To solve AI hallucinations, Kemora implements a deterministic Retrieval-Augmented Generation (RAG) pipeline, dynamically fetching real, localized Points of Interest (POIs) from a comprehensive, pre-populated local database within a 30km radius before injecting them into an OpenRouter-hosted Large Language Model (LLM). Empirical benchmarking confirms the cached read path serves requests with a median latency around 100\,ms and sustains robust, error-free throughput up to 100,000 concurrent requests via aggressive \texttt{IMemoryCache} reuse, while transitioning from sequential database fetching to in-memory Zero-Fetch Image Injection eradicated concurrency bottlenecks. Future iterations should transition to a globally distributed Microservices Architecture deployed via Kubernetes, implement an offline-first mobile architecture utilizing SQLite/Hive, and leverage advanced proprietary RAG pipelines to ensure sovereign data governance.
+
+\newpage
+\input{acknowledgments}
+
+\newpage
+\tableofcontents
+\newpage
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Figures}
+\newpage
+\listoftables
+\addcontentsline{toc}{chapter}{List of Tables}
+\newpage
+
+\pagenumbering{arabic}
+\addcontentsline{toc}{part}{Body of the Report}
+
+\input{chapter1_intro}
+\input{chapter2_lit_review}
+\input{chapter3_analysis_design}
+\input{chapter4_implementation}
+\input{chapter5_testing}
+\input{chapter7_benchmarks}
+\input{chapter8_business_model}
+\input{chapter6_conclusion}
+
+\addcontentsline{toc}{part}{Back Matter (Supporting Materials)}
+
+\input{references}
+
+\appendix
+\input{appendix_api}
+\input{appendix_use_cases}
+\input{appendix_data_dictionary}
+
+\input{glossary}
+
+\end{document}

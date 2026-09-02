@@ -1,0 +1,137 @@
+\chapter{Flutter UI Widget Dictionary}
+\label{ch:flutter-ui-widget-dictionary}
+
+This appendix provides a comprehensive reference to the primary Flutter UI widgets and the design system implemented for the Kemora application. The frontend architecture relies on a highly modular and reusable component strategy, leveraging the ``Modern Heritage'' design aesthetic.
+
+\section{Modern Heritage Design System}
+\label{sec:modern-heritage-design-system}
+
+The ``Modern Heritage'' design system is implemented in Flutter using Material 3's \texttt{ThemeData} and custom token classes (\texttt{AppColors}, \texttt{AppTypography}, and \texttt{AppShadows}). It combines rich, earthy tones like \texttt{primaryContainer} (\#c5a021, Primary Gold) and \texttt{secondary} (\#435b9f, Primary Blue) with modern, clean typography and subtle drop shadows for an elegant, premium feel.
+
+\begin{itemize}
+    \item \textbf{Color Scheme:} The \texttt{AppColors} class defines all color tokens, bridging semantic naming (e.g., \texttt{primary}, \texttt{surfaceContainerHighest}) with fixed brand colors.
+    \item \textbf{Typography:} \texttt{AppTypography} extends Material 3's \texttt{TextTheme}, applying brand-specific font weights and letter spacing (tracking) to establish hierarchy.
+    \item \textbf{Theme Injection:} \texttt{AppTheme.lightTheme} configures the global \texttt{ThemeData}, overriding default styles for \texttt{AppBar}, \texttt{ElevatedButton}, \texttt{Card}, and \texttt{InputDecoration} to ensure consistency without redundant inline styling.
+\end{itemize}
+
+\section{Core Reusable Widgets}
+\label{sec:core-reusable-widgets}
+
+The \texttt{lib/presentation/widgets} directory contains all globally shared UI components. These components encapsulate complex layout, state, and animation logic.
+
+\subsection{EditorialPlaceCard}
+The \texttt{EditorialPlaceCard} is a visually striking component used to display points of interest, accommodations, and tours. It features a large cover image, a soft gradient overlay for text legibility, and an integrated \texttt{GlassmorphismContainer} for the favorite action.
+
+\begin{lstlisting}[language=Java, caption={EditorialPlaceCard Build Method Excerpt}]
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AspectRatio(
+        aspectRatio: aspectRatio > 1 ? aspectRatio : 1 / (1 / aspectRatio),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: AppShadows.ambient,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Image or Placeholder
+                // ... inline image loading logic ...
+                
+                // Gradient Overlay (Soft Lapis-to-transparent)
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        AppColors.secondary.withOpacity(0.9),
+                        AppColors.secondary.withOpacity(0.4),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.4, 0.8],
+                    ),
+                  ),
+                ),
+                
+                // Content Overlay ...
+                // ... inline widget composition ...
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+\end{lstlisting}
+
+\subsection{Itinerary Widgets}
+The itinerary timeline is composed of several modular widgets defined in \texttt{itinerary\_widgets.dart}, including \texttt{DayHeader}, \texttt{ActivityTimelineTile}, and \texttt{PremiumActivityCard}.
+
+The \texttt{ActivityTimelineTile} constructs the vertical timeline layout, seamlessly connecting adjacent activities using custom-drawn lines and circular nodes.
+
+\begin{lstlisting}[language=Java, caption={ActivityTimelineTile Layout Structure}]
+class ActivityTimelineTile extends StatelessWidget {
+  final ItineraryItem activity;
+  final bool isLast;
+  const ActivityTimelineTile({
+    super.key,
+    required this.activity,
+    this.isLast = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Timeline logic
+          Column(
+            children: [
+              Container(
+                width: 16,
+                height: 16,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primaryContainer,
+                  border: Border.all(color: Colors.white, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryContainer.withValues(alpha: 0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: AppColors.primaryContainer,
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 16),
+          // Content Card
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: PremiumActivityCard(activity: activity),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+\end{lstlisting}
+
+For the full component dictionary, please refer to the GitHub repository.

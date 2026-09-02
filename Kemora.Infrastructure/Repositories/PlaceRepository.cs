@@ -12,28 +12,40 @@ namespace Kemora.Infrastructure.Repositories
     {
         public PlaceRepository(ApplicationDbContext ctx) : base(ctx) { }
 
-        public async Task<IEnumerable<Place>> GetFilteredAsync(string? query, int? governorateId, int? categoryId, int page, int size)
+        public async Task<IEnumerable<Place>> GetFilteredAsync(string? query, int? governorateId, int? categoryId, string? categoryName, string? sortBy, int page, int size)
         {
-            var sq = _dbSet.AsQueryable();
+            var sq = _dbSet.AsQueryable().Where(p => !string.IsNullOrEmpty(p.MainImageURL));
 
             if (governorateId.HasValue) sq = sq.Where(p => p.GovernorateID == governorateId.Value);
             if (categoryId.HasValue) sq = sq.Where(p => p.PlaceType.CategoryID == categoryId.Value);
+            if (!string.IsNullOrWhiteSpace(categoryName)) sq = sq.Where(p => p.PlaceType.Category.Name == categoryName);
             if (!string.IsNullOrWhiteSpace(query)) sq = sq.Where(p => p.Name.Contains(query) || p.Description.Contains(query));
+
+            if (sortBy?.ToLower() == "rating")
+            {
+                sq = sq.OrderByDescending(p => p.Rating);
+            }
+            else
+            {
+                sq = sq.OrderByDescending(p => p.PlaceID);
+            }
 
             return await sq
                 .Include(p => p.Governorate)
                 .Include(p => p.PlaceType).ThenInclude(pt => pt.Category)
+                .Include(p => p.Reviews)
                 .OrderByDescending(p => p.PlaceID)
                 .Skip((page - 1) * size).Take(size)
                 .ToListAsync();
         }
 
-        public async Task<int> GetFilteredCountAsync(string? query, int? governorateId, int? categoryId)
+        public async Task<int> GetFilteredCountAsync(string? query, int? governorateId, int? categoryId, string? categoryName)
         {
-            var sq = _dbSet.AsQueryable();
+            var sq = _dbSet.AsQueryable().Where(p => !string.IsNullOrEmpty(p.MainImageURL));
 
             if (governorateId.HasValue) sq = sq.Where(p => p.GovernorateID == governorateId.Value);
             if (categoryId.HasValue) sq = sq.Where(p => p.PlaceType.CategoryID == categoryId.Value);
+            if (!string.IsNullOrWhiteSpace(categoryName)) sq = sq.Where(p => p.PlaceType.Category.Name == categoryName);
             if (!string.IsNullOrWhiteSpace(query)) sq = sq.Where(p => p.Name.Contains(query) || p.Description.Contains(query));
 
             return await sq.CountAsync();
@@ -50,14 +62,16 @@ namespace Kemora.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.PlaceID == id);
         }
 
-        public async Task<List<Governorate>> GetAllGovernoratesAsync() => await _ctx.Governorates.ToListAsync();
-        public async Task<List<Category>> GetAllCategoriesAsync() => await _ctx.Categories.ToListAsync();
-        public async Task<List<PlaceType>> GetAllPlaceTypesAsync() => await _ctx.PlaceTypes.Include(pt => pt.Category).ToListAsync();
-
-        public async Task<bool> PlaceExistsAsync(int id) => await _dbSet.AnyAsync(p => p.PlaceID == id);
-        
-        public async Task<PlaceType?> GetPlaceTypeAsync(int id) => await _ctx.PlaceTypes.FindAsync(id);
-        public async Task<Category?> GetCategoryAsync(int id) => await _ctx.Categories.FindAsync(id);
-        public async Task<Governorate?> GetGovernorateAsync(int id) => await _ctx.Governorates.FindAsync(id);
+        public async Task<IEnumerable<Place>> GetTopPlacesAsync(int count = 20)
+        {
+            return await _dbSet
+                .Where(p => !string.IsNullOrEmpty(p.MainImageURL))
+                .Include(p => p.Governorate)
+                .Include(p => p.PlaceType).ThenInclude(pt => pt.Category)
+                .Include(p => p.Reviews)
+                .OrderByDescending(p => p.Rating)
+                .Take(count)
+                .ToListAsync();
+        }
     }
 }

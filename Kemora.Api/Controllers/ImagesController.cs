@@ -29,7 +29,7 @@ namespace Kemora.Api.Controllers
         /// <param name="file">The image file to upload (JPEG, PNG, etc.).</param>
         /// <returns>The public URL of the uploaded image.</returns>
         [HttpPost("upload")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

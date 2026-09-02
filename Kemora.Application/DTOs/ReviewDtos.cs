@@ -20,5 +20,6 @@ namespace Kemora.Application.DTOs
         public int Rating { get; set; }
         public string Text { get; set; } = string.Empty;
         public int PlaceID { get; set; }
+        public string? Source { get; set; }
     }
 }

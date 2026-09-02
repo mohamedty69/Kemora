@@ -1,4 +1,4 @@
-﻿using Kemora.Domain.Entities;
+using Kemora.Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,12 +24,12 @@ namespace Kemora.Infrastructure.Data
         public DbSet<Comment> Comments { get; set; }
         public DbSet<CommentMedia> CommentMedia { get; set; }
         public DbSet<CommentReaction> CommentReactions { get; set; }
+        public DbSet<Story> Stories { get; set; }
 
         // Planning
         public DbSet<Trip> Trips { get; set; }
         public DbSet<TripPlace> TripPlaces { get; set; }
-        public DbSet<TripTemplate> TripTemplates { get; set; }
-        public DbSet<TripTemplateItem> TripTemplateItems { get; set; }
+        public DbSet<PrecomputedTripPlan> PrecomputedTripPlans { get; set; }
 
         // Gamification
         public DbSet<Badge> Badges { get; set; }
@@ -47,6 +47,11 @@ namespace Kemora.Infrastructure.Data
             builder.Entity<UserFavorite>().HasKey(uf => new { uf.UserID, uf.PlaceID });
             builder.Entity<PostReaction>().HasKey(pr => new { pr.PostID, pr.UserID });
             builder.Entity<CommentReaction>().HasKey(cr => new { cr.CommentID, cr.UserID });
+
+            // Indexes
+            builder.Entity<PrecomputedTripPlan>()
+                .HasIndex(p => p.CacheKey)
+                .IsUnique();
 
             // 2. Decimal Precision
             builder.Entity<Place>(entity =>

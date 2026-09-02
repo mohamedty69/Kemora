@@ -6,7 +6,5 @@ namespace Kemora.Domain.Interfaces
 {
     public interface IReviewRepository : IRepository<Review>
     {
-        Task<IEnumerable<Review>> GetByPlaceIdAsync(int placeId, int page, int size);
-        Task<int> GetCountByPlaceIdAsync(int placeId);
     }
 }

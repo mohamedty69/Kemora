@@ -2,6 +2,7 @@ using Kemora.Application.DTOs;
 using Kemora.Application.Interfaces;
 using Kemora.Domain.Entities;
 using Kemora.Domain.Interfaces;
+using AutoMapper;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,27 +14,22 @@ namespace Kemora.Application.Services
         private readonly INotificationRepository _notificationRepo;
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationPusher _pusher;
+        private readonly IMapper _mapper;
 
-        public NotificationService(INotificationRepository notificationRepo, IUnitOfWork unitOfWork, INotificationPusher pusher)
+        public NotificationService(INotificationRepository notificationRepo, IUnitOfWork unitOfWork, INotificationPusher pusher, IMapper mapper)
         {
             _notificationRepo = notificationRepo;
             _unitOfWork = unitOfWork;
             _pusher = pusher;
+            _mapper = mapper;
         }
 
         public async Task<PagedResult<NotificationDto>> GetMyNotificationsAsync(string userId, int page, int pageSize)
         {
-            var notifs = await _notificationRepo.GetByUserIdAsync(userId, page, pageSize);
-            var count = await _notificationRepo.GetCountByUserIdAsync(userId);
+            var notifs = await _notificationRepo.GetPagedAsync(n => n.UserID == userId, q => q.OrderByDescending(n => n.CreatedAt), page, pageSize);
+            var count = await _notificationRepo.CountAsync(n => n.UserID == userId);
 
-            var items = notifs.Select(n => new NotificationDto
-            {
-                NotificationID = n.NotificationID,
-                Title = n.Title,
-                Message = n.Message,
-                IsRead = n.IsRead,
-                CreatedAt = n.CreatedAt
-            }).ToList();
+            var items = _mapper.Map<List<NotificationDto>>(notifs);
 
             return new PagedResult<NotificationDto>
             {
@@ -46,7 +42,7 @@ namespace Kemora.Application.Services
 
         public async Task<int> GetUnreadCountAsync(string userId)
         {
-            return await _notificationRepo.GetUnreadCountAsync(userId);
+            return await _notificationRepo.CountAsync(n => n.UserID == userId && !n.IsRead);
         }
 
         public async Task MarkAsReadAsync(int notificationId, string userId)
@@ -61,7 +57,11 @@ namespace Kemora.Application.Services
 
         public async Task MarkAllAsReadAsync(string userId)
         {
-            await _notificationRepo.MarkAllAsReadAsync(userId);
+            var unread = await _notificationRepo.FindAsync(n => n.UserID == userId && !n.IsRead);
+            foreach (var notification in unread)
+            {
+                notification.IsRead = true;
+            }
             await _unitOfWork.CommitAsync();
         }
 

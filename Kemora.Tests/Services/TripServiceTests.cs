@@ -15,6 +15,7 @@ namespace Kemora.Tests.Services
     {
         private readonly Mock<ITripRepository> _mockTripRepo;
         private readonly Mock<IPlaceRepository> _mockPlaceRepo;
+        private readonly Mock<IRepository<TripPlace>> _mockTripPlaceRepo;
         private readonly Mock<IMapper> _mockMapper;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly TripService _service;
@@ -23,12 +24,14 @@ namespace Kemora.Tests.Services
         {
             _mockTripRepo = new Mock<ITripRepository>();
             _mockPlaceRepo = new Mock<IPlaceRepository>();
+            _mockTripPlaceRepo = new Mock<IRepository<TripPlace>>();
             _mockMapper = new Mock<IMapper>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
 
             _service = new TripService(
                 _mockTripRepo.Object,
                 _mockPlaceRepo.Object,
+                _mockTripPlaceRepo.Object,
                 _mockMapper.Object,
                 _mockUnitOfWork.Object);
         }
